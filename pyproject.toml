@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Mandarin speech -> mouth-shape (viseme) timeline for 2D avatars: Live2D, mesh avatars, VTubers"
 readme = "README.md"
 license = { text = "MIT" }
+authors = [{ name = "Starfish Studio" }]
 requires-python = ">=3.9"
 dependencies = [
     "faster-whisper>=1.0",   # MIT

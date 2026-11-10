@@ -124,7 +124,9 @@ A 9-minute narrated video: 1980 syllables, Taiwanese Mandarin, female TTS voice,
   - Acronyms in capitals (CISA, FBI) are spelled letter by letter.
   - Common words (App, Google, iPhone, passkey …) come from a small dictionary, `WORD_SHAPES` in [`zh_lipsync/visemes.py`](zh_lipsync/visemes.py).
   - Any other English word gets a rough guess from its vowel letters.
-  - Add your own vocabulary to the dictionary. Whether an acronym is spelled or read as a word is a guess.
+  - Whether an acronym is spelled out or read as a word is a guess. Unknown all-caps words are spelled; words in `WORD_SHAPES` are read as words.
+  - On the demo video (a TTS voice) every acronym was checked against the audio. CISA, FBI, MFA and NIST were spelled out, and SIM and FIDO were read as words, which matches the defaults. Other voices may differ: people often say NIST as one word.
+  - Add your own vocabulary to `WORD_SHAPES`.
 - **Fast speech.**
   - No shape lasts less than 2 frames at 30 fps. At more than about 6 syllables per second, short syllables merge into their neighbours.
   - Diphthongs are split only when a syllable lasts at least 0.2 s.
@@ -133,6 +135,7 @@ A 9-minute narrated video: 1980 syllables, Taiwanese Mandarin, female TTS voice,
   - Without subtitles, one recognition error can move a few syllables.
   - Subtitles with line timings help the most.
 - **Clean voice only.** The pause clean-up uses audio energy, so background music or noise under the voice makes it less reliable. Use the dry voice track.
+- **Only as distinct as your drawings.** On the demo character, `i`, `e` and closed look almost the same at full size, so those changes are hard to see. If you can, draw `i` with a visibly wider opening.
 - **Mandarin only.** It does not handle Cantonese or Taiwanese Hokkien.
 - **Six shapes are an approximation.** ㄜ, ㄦ and ㄟ all become "half open". If your avatar has more mouth drawings, map `syllables[].zhuyin` yourself.
 - **Not real-time.** The tool needs the whole audio file first. A live TTS stream needs timings from the TTS engine.
@@ -145,10 +148,12 @@ python -m unittest discover -s tests      # no model download needed
 
 ## License
 
+Made by **Starfish Studio**.
+
 - **Code:** MIT. See [LICENSE](LICENSE).
 - **Dependencies:**
   - faster-whisper: MIT.
   - pypinyin: MIT.
   - NumPy: BSD-3-Clause.
   - OpenCC (optional): Apache-2.0.
-- **Demo media:** The character in `docs/demo/` is an original character of the project authors. It is there for demonstration only and is **not** covered by the MIT license.
+- **Demo media:** The character in `docs/demo/` is an original character of Starfish Studio. It is there for demonstration only and is **not** covered by the MIT license.
