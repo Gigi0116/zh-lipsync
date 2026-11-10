@@ -1,0 +1,49 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>zh-lipsync + mesh-avatar</title>
+<style>
+  body { margin: 0; background: #1a1e3d; color: #eee; font: 14px system-ui, sans-serif; }
+  canvas { width: min(90vw, 720px); aspect-ratio: 1; display: block; margin: 12px auto; }
+  p { text-align: center; } button { font-size: 18px; padding: 8px 18px; }
+</style>
+<p><button id="play">▶ Play</button> <span id="info"></span></p>
+<canvas id="avatar" width="1080" height="1080"></canvas>
+<script type="module">
+// Serve this folder with any static server (e.g. `python -m http.server`), then open:
+//   index.html?avatar=your.mavatar&audio=voice.wav&cues=voice.lipsync.json
+// mesh-avatar (MIT, https://github.com/shinshin86/mesh-avatar-studio) is loaded from the npm CDN.
+import { loadMeshAvatar } from 'https://cdn.jsdelivr.net/npm/mesh-avatar@0.7.2/+esm';
+import { CuePlayer } from '../js/zh-lipsync-player.js';
+
+const q = new URLSearchParams(location.search);
+const avatar = await loadMeshAvatar(document.querySelector('#avatar'), q.get('avatar') ?? 'avatar.mavatar');
+const timeline = await (await fetch(q.get('cues') ?? 'voice.lipsync.json')).json();
+const player = new CuePlayer(timeline.cues, { lead: 1 / 30 });
+
+// The shape comes from the timeline. Bigger openness is fine here because shapes no longer flicker on volume,
+// and a fast close keeps up with syllables.
+avatar.setLipSync({ openness: 0.3, closeSpeed: 0.5 });
+
+document.querySelector('#play').onclick = async () => {
+  const audio = new Audio(q.get('audio') ?? 'voice.wav');
+  const ctx = new AudioContext();
+  const analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
+  ctx.createMediaElementSource(audio).connect(analyser); analyser.connect(ctx.destination);
+  const buf = new Float32Array(analyser.fftSize);
+  let current = null;
+  avatar.setSpeaking(true);
+  await audio.play();
+  const frame = () => {
+    const shape = player.at(audio.currentTime);
+    if (shape !== current) { avatar.holdMouth(shape); current = shape; }   // only call on change
+    // Volume still drives the head motion (nods); the mouth shape itself comes from the timeline.
+    analyser.getFloatTimeDomainData(buf);
+    let s = 0; for (const x of buf) s += x * x;
+    avatar.setVoiceLevel(Math.min(1, Math.sqrt(s / buf.length) * 8));
+    document.querySelector('#info').textContent = `${audio.currentTime.toFixed(2)} s  ${shape}`;
+    if (!audio.ended) requestAnimationFrame(frame);
+    else { avatar.holdMouth('n'); avatar.setVoiceLevel(0); avatar.setSpeaking(false); }
+  };
+  requestAnimationFrame(frame);
+};
+</script>
